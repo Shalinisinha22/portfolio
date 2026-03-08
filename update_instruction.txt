@@ -1,0 +1,1 @@
+Add an 'Achievements' section and a 'Contact' section to the end of the page before the footer. Also, add CTA buttons in the Hero section.
