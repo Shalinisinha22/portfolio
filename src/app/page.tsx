@@ -1,475 +1,584 @@
 "use client";
 
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  Github,
-  Linkedin,
-  Mail,
-  Download,
-  Globe,
-  Server,
-  Database,
-  Brain,
-  Smartphone,
-  Code,
-  Layout,
-  Briefcase,
-  GraduationCap,
-  Trophy,
-  ArrowRight,
-  MessageCircle,
-  Menu,
-  X
-} from "lucide-react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
+import { gsap } from "gsap";
 
-const fadeInUp = {
-  hidden: { opacity: 0, y: 40 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" as const } }
-};
+const screenshots = [
+  { src: "/assets/screenshot-1.png", title: "HR360 — AI-Powered HR & Payroll Portal", tag: "Full Stack + AI", isApp: false },
+  { src: "/assets/screenshot-2.png", title: "AIQP — AI Question Paper Generator", tag: "Python · FastAPI · OpenAI", isApp: false },
+  { src: "/assets/screenshot-3.png", title: "AIQP — Source PDF Parsing & Diagram Extraction", tag: "AIQP · Document Processing", isApp: false },
+  { src: "/assets/screenshot-4.png", title: "AIQP — Question Bank & Duplicate Detection", tag: "AIQP · Vector Search", isApp: false },
+  { src: "/assets/screenshot-5.png", title: "AIQP — Syllabus Mapping & Exam Paper Reviewer", tag: "AIQP · Publishing Workflow", isApp: false },
+  { src: "/assets/balmukund.jpeg", title: "EmpQuick — AI Job Portal & Candidate Dashboard", tag: "React.js · Node.js · OpenAI", isApp: true },
+  { src: "/assets/empquick.jpeg", title: "Balmukund Super Steel — Mobile Ordering & Attendance App", tag: "React Native · AiSensy", isApp: true },
+  { src: "/assets/aiqp.jpeg", title: "Civils Adda — Exam Prep Platform Mobile App", tag: "React Native · Firebase", isApp: true },
+  { src: "/assets/proctor-ai.jpeg", title: "Balmukund Super Steel — Orders & Admin Dashboard", tag: "React Native · AiSensy", isApp: true },
+];
 
-const staggerContainer = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.2
-    }
-  }
-};
+function ProjectScreenshotSlider() {
+  const [current, setCurrent] = useState(0);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const slideRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const autoPlayRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-export default function Portfolio() {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const goTo = useCallback(
+    (idx: number, direction?: "next" | "prev") => {
+      if (isAnimating || idx === current) return;
+      const dir = direction ?? (idx > current ? "next" : "prev");
+      const xFrom = dir === "next" ? "100%" : "-100%";
+      const xTo = dir === "next" ? "-100%" : "100%";
+
+      setIsAnimating(true);
+      const outSlide = slideRefs.current[current];
+      const inSlide = slideRefs.current[idx];
+      if (!outSlide || !inSlide) {
+        setCurrent(idx);
+        setIsAnimating(false);
+        return;
+      }
+
+      // Position incoming slide off-screen
+      gsap.set(inSlide, { x: xFrom, opacity: 1, zIndex: 2 });
+      gsap.set(outSlide, { zIndex: 1 });
+
+      const tl = gsap.timeline({
+        onComplete: () => {
+          gsap.set(outSlide, { x: "0%", zIndex: 0, opacity: 0 });
+          setCurrent(idx);
+          setIsAnimating(false);
+        },
+      });
+
+      tl.to(outSlide, { x: xTo, duration: 0.55, ease: "power3.inOut" }, 0)
+        .to(inSlide, { x: "0%", duration: 0.55, ease: "power3.inOut" }, 0);
+
+      // Caption fade
+      const caption = inSlide.querySelector(".slider-caption-inner");
+      if (caption) {
+        gsap.fromTo(caption, { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.4, delay: 0.35, ease: "power2.out" });
+      }
+    },
+    [current, isAnimating]
+  );
+
+  const next = useCallback(() => {
+    const nextIdx = (current + 1) % screenshots.length;
+    goTo(nextIdx, "next");
+  }, [current, goTo]);
+
+  const prev = useCallback(() => {
+    const prevIdx = (current - 1 + screenshots.length) % screenshots.length;
+    goTo(prevIdx, "prev");
+  }, [current, goTo]);
+
+  // Initialize all slides
+  useEffect(() => {
+    slideRefs.current.forEach((slide, i) => {
+      if (slide) {
+        gsap.set(slide, { x: "0%", opacity: i === 0 ? 1 : 0, zIndex: i === 0 ? 1 : 0 });
+      }
+    });
+  }, []);
+
+  // Auto play
+  useEffect(() => {
+    autoPlayRef.current = setInterval(next, 4000);
+    return () => {
+      if (autoPlayRef.current) clearInterval(autoPlayRef.current);
+    };
+  }, [next]);
+
+  // Entrance animation
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          gsap.fromTo(
+            containerRef.current,
+            { opacity: 0, y: 40, scale: 0.97 },
+            { opacity: 1, y: 0, scale: 1, duration: 0.8, ease: "power3.out" }
+          );
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.15 }
+    );
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, []);
 
   return (
-    <div className="min-h-screen bg-[#050505] text-slate-200 font-sans selection:bg-indigo-500/30">
-
-      {/* Dynamic Background */}
-      <div className="fixed inset-0 -z-10 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-indigo-900/20 via-[#050505] to-[#050505]"></div>
-      <div className="fixed inset-0 -z-10 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-100 contrast-150 mix-blend-overlay"></div>
-
-      {/* Navbar */}
-      <nav className="fixed top-0 w-full z-50 bg-[#050505]/80 backdrop-blur-md border-b border-white/5">
-        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <span className="font-bold text-xl tracking-tighter text-white">Shalini<span className="text-indigo-500">.dev</span></span>
-          <div className="hidden md:flex gap-6 text-sm font-medium text-slate-400">
-            <a href="#about" className="hover:text-white transition-colors">About</a>
-            <a href="#skills" className="hover:text-white transition-colors">Skills</a>
-            <a href="#experience" className="hover:text-white transition-colors">Experience</a>
-            <a href="#projects" className="hover:text-white transition-colors">Projects</a>
-            <a href="#achievements" className="hover:text-white transition-colors">Achievements</a>
-            <a href="#contact" className="hover:text-white transition-colors">Contact</a>
-          </div>
-          <div className="flex items-center gap-4">
-            <a
-              href="/resume.pdf"
-              target="_blank"
-              className="hidden md:flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-full text-sm font-medium transition-all hover:scale-105 active:scale-95"
-            >
-              <Download size={16} /> Resume
-            </a>
-            <button
-              className="md:hidden text-slate-300 hover:text-white transition-colors"
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            >
-              {isMobileMenuOpen ? <X size={28} /> : <Menu size={28} />}
-            </button>
-          </div>
-        </div>
-
-        {/* Mobile Menu */}
-        <AnimatePresence>
-          {isMobileMenuOpen && (
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.2 }}
-              className="md:hidden absolute top-16 left-0 w-full bg-[#050505]/95 backdrop-blur-xl border-b border-white/5 p-6 flex flex-col gap-4 shadow-xl text-center"
-            >
-              <a href="#about" onClick={() => setIsMobileMenuOpen(false)} className="text-slate-300 hover:text-white text-lg font-medium transition-colors py-2">About</a>
-              <a href="#skills" onClick={() => setIsMobileMenuOpen(false)} className="text-slate-300 hover:text-white text-lg font-medium transition-colors py-2">Skills</a>
-              <a href="#experience" onClick={() => setIsMobileMenuOpen(false)} className="text-slate-300 hover:text-white text-lg font-medium transition-colors py-2">Experience</a>
-              <a href="#projects" onClick={() => setIsMobileMenuOpen(false)} className="text-slate-300 hover:text-white text-lg font-medium transition-colors py-2">Projects</a>
-              <a href="#achievements" onClick={() => setIsMobileMenuOpen(false)} className="text-slate-300 hover:text-white text-lg font-medium transition-colors py-2">Achievements</a>
-              <a href="#contact" onClick={() => setIsMobileMenuOpen(false)} className="text-slate-300 hover:text-white text-lg font-medium transition-colors py-2">Contact</a>
-
-              <a
-                href="/resume.pdf"
-                target="_blank"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="flex items-center justify-center gap-2 mt-4 px-6 py-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-full font-medium transition-all"
-              >
-                <Download size={20} /> Download Resume
-              </a>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </nav>
-
-      <main className="max-w-6xl mx-auto px-6 pt-32 pb-20">
-
-        {/* Hero Section */}
-        <section id="about" className="min-h-[80vh] flex flex-col justify-center items-center text-center">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5, ease: "easeOut" }}
-            className="mb-8 relative"
+    <div className="gsap-slider-wrap" ref={containerRef}>
+      {/* Slide track */}
+      <div className="gsap-slider-track">
+        {screenshots.map((s, i) => (
+          <div
+            key={i}
+            ref={(el) => { slideRefs.current[i] = el; }}
+            className={`gsap-slide ${s.isApp ? "is-app-slide" : ""}`}
+            style={{ opacity: i === 0 ? 1 : 0 }}
           >
-            <div className="absolute inset-0 bg-indigo-500 rounded-full blur-2xl opacity-20 animate-pulse"></div>
-            <Image
-              src="/profile.jpeg"
-              alt="Shalini Sinha"
-              width={160}
-              height={160}
-              className="relative rounded-full border-2 border-white/10 object-cover shadow-2xl h-40 w-40"
-            />
-          </motion.div>
-
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2, duration: 0.6 }}
-            className="text-5xl md:text-7xl font-bold text-white tracking-tight mb-6"
-          >
-            Hi, I'm <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400">Shalini Sinha</span>
-          </motion.h1>
-
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3, duration: 0.6 }}
-            className="text-xl md:text-2xl text-slate-400 max-w-2xl mb-10 leading-relaxed text-center"
-          >
-            Software Developer specializing in <strong className="text-slate-200 font-medium">Full Stack (MERN)</strong> and <strong className="text-slate-200 font-medium">AI Systems</strong>. Building scalable, intelligent, and engaging applications.
-          </motion.p>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4, duration: 0.6 }}
-            className="flex flex-wrap items-center justify-center gap-4"
-          >
-            <a href="mailto:shalinisinha.cspatna@gmail.com" className="p-3 bg-white/5 hover:bg-white/10 rounded-full text-slate-300 hover:text-white transition-all hover:scale-110">
-              <Mail size={24} />
-            </a>
-            <a href="https://wa.me/916201041137" target="_blank" rel="noreferrer" className="p-3 bg-white/5 hover:bg-white/10 rounded-full text-green-400 hover:text-green-300 transition-all hover:scale-110">
-              <MessageCircle size={24} />
-            </a>
-            <a href="https://github.com/Shalinisinha22" target="_blank" rel="noreferrer" className="p-3 bg-white/5 hover:bg-white/10 rounded-full text-slate-300 hover:text-white transition-all hover:scale-110">
-              <Github size={24} />
-            </a>
-            <a href="https://www.linkedin.com/in/shalini-sinha-bbb943202" target="_blank" rel="noreferrer" className="p-3 bg-white/5 hover:bg-white/10 rounded-full text-slate-300 hover:text-white transition-all hover:scale-110">
-              <Linkedin size={24} />
-            </a>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5, duration: 0.6 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-10"
-          >
-            <a href="#projects" className="px-8 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-full font-medium transition-all hover:scale-105 flex items-center gap-2">
-              View My Work <ArrowRight size={18} />
-            </a>
-            <a href="#contact" className="px-8 py-3 bg-white/5 border border-white/10 hover:bg-white/10 text-white rounded-full font-medium transition-all hover:scale-105">
-              Contact Me
-            </a>
-          </motion.div>
-        </section>
-
-        {/* Skills Section */}
-        <section id="skills" className="py-24 border-t border-white/5">
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }} variants={fadeInUp} className="mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Technical Arsenal</h2>
-            <div className="h-1 w-20 bg-indigo-500 rounded-full"></div>
-          </motion.div>
-
-          <motion.div
-            variants={staggerContainer}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-100px" }}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-          >
-            <SkillCard
-              icon={<Code className="text-blue-400" size={32} />}
-              title="Frontend"
-              skills="React.js, Next.js, React Native, Redux, Tailwind CSS, Material UI, HTML5, CSS3"
-            />
-            <SkillCard
-              icon={<Server className="text-green-400" size={32} />}
-              title="Backend"
-              skills="Node.js, Express.js, FastAPI, Spring Boot, REST APIs, Socket.IO"
-            />
-            <SkillCard
-              icon={<Database className="text-yellow-400" size={32} />}
-              title="Databases"
-              skills="MongoDB, MySQL, Firebase"
-            />
-            <SkillCard
-              icon={<Brain className="text-purple-400" size={32} />}
-              title="AI / Computer Vision"
-              skills="OpenAI API, OpenCV, MediaPipe, WebRTC VAD"
-            />
-            <SkillCard
-              icon={<Layout className="text-pink-400" size={32} />}
-              title="Languages & Tools"
-              skills="JavaScript, Python, Git, Nginx, Apache, Expo, Render, Postman"
-            />
-          </motion.div>
-        </section>
-
-        {/* Experience Section */}
-        <section id="experience" className="py-24 border-t border-white/5">
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }} variants={fadeInUp} className="mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Professional Experience</h2>
-            <div className="h-1 w-20 bg-indigo-500 rounded-full"></div>
-          </motion.div>
-
-          <div className="space-y-12">
-            <ExperienceItem
-              title="Software Developer"
-              company="DgCrux Technology Pvt. Ltd."
-              date="May 2025 – Present" // Used exact dates from resume, though it overlaps with present
-              description={[
-                "Built AIQP, an AI-powered question paper generator using Python, FastAPI, and OpenAI APIs to automatically generate exams.",
-                "Implemented LLM-based automated answer evaluation with grading and feedback generation.",
-                "Developed Proctor AI, an AI-based remote exam monitoring platform using React.js, Python, OpenCV, MediaPipe, and WebRTC.",
-                "Contributed to the AIIMS Recruitment Portal using React.js with Spring Boot backend.",
-                "Developed EmpQuick, a React Native job marketplace app published on Google Play Store."
-              ]}
-            />
-            <ExperienceItem
-              title="Full Stack Developer"
-              company="Mania Group of Technology"
-              date="Jul 2023 – Feb 2024"
-              description={[
-                "Developed MERN stack applications using React.js, Node.js, Express.js, and MongoDB.",
-                "Implemented real-time communication functionality using Socket.IO.",
-                "Integrated PhonePe payment gateway and Msg91 OTP authentication handles."
-              ]}
-            />
-          </div>
-        </section>
-
-        {/* Projects Section */}
-        <section id="projects" className="py-24 border-t border-white/5">
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }} variants={fadeInUp} className="mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Featured Projects</h2>
-            <div className="h-1 w-20 bg-indigo-500 rounded-full"></div>
-          </motion.div>
-
-          <motion.div
-            variants={staggerContainer}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-100px" }}
-            className="grid grid-cols-1 md:grid-cols-2 gap-8"
-          >
-            <ProjectCard
-              title="AIQP – AI Question Paper Generator"
-              tech="Python, FastAPI, OpenAI API"
-              description="AI-based platform generating exam papers based on syllabus and difficulty levels automatically, integrated with LLM evaluation."
-            />
-            <ProjectCard
-              title="Proctor AI – Online Exam Monitoring"
-              tech="React.js, Python, OpenCV, MediaPipe"
-              description="AI-powered proctoring system detecting suspicious activity using facial recognition tracking and advanced noise monitoring algorithms."
-            />
-            <ProjectCard
-              title="EmpQuick – Job Marketplace"
-              tech="React Native, Node.js, MongoDB"
-              description="Comprehensive mobile recruitment platform directly connecting employers and job seekers, published on the Google Play Store."
-            />
-            <ProjectCard
-              title="Balmukund Super Steel"
-              tech="React Native, React.js, Node.js"
-              description="Developed the official company mobile application and core website focusing on highly optimized UI and overall performance gains."
-            />
-          </motion.div>
-        </section>
-
-        {/* Education Section */}
-        <section id="education" className="py-24 border-t border-white/5">
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }} variants={fadeInUp} className="mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Education</h2>
-            <div className="h-1 w-20 bg-indigo-500 rounded-full"></div>
-          </motion.div>
-
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={fadeInUp}
-            className="bg-white/[0.02] border border-white/5 rounded-2xl p-8 hover:bg-white/[0.04] transition-colors"
-          >
-            <div className="flex items-start gap-4">
-              <div className="p-3 bg-indigo-500/10 rounded-xl text-indigo-400">
-                <GraduationCap size={32} />
+            {s.isApp && (
+              <div className="gsap-slide-bg-blur">
+                <Image src={s.src} alt="" fill sizes="100vw" style={{ objectFit: "cover", filter: "blur(24px) brightness(0.25)" }} />
               </div>
-              <div>
-                <h3 className="text-xl font-bold text-white">Bachelor of Computer Applications</h3>
-                <p className="text-indigo-400 font-medium mb-2">Patna Women's College, Patna</p>
-                <p className="text-slate-400 text-sm mb-4">Graduated: 2021 | CGPA: 9.64</p>
-
-                <div className="space-y-2 text-sm text-slate-300">
-                  <p><span className="text-slate-500">2018:</span> 12th - Holy Mission Senior Secondary School, Patna (89%)</p>
-                  <p><span className="text-slate-500">2016:</span> 10th - St. John Residential Public School, Patna (9.8 CGPA)</p>
-                </div>
+            )}
+            <Image
+              src={s.src}
+              alt={s.title}
+              width={1200}
+              height={720}
+              className={`gsap-slide-img ${s.isApp ? "fit-contain" : ""}`}
+              draggable={false}
+              priority={i === 0}
+            />
+            <div className="gsap-caption">
+              <div className="slider-caption-inner">
+                <span className="gsap-cap-tag">{s.tag}</span>
+                <div className="gsap-cap-title">{s.title}</div>
               </div>
             </div>
-          </motion.div>
-        </section>
-
-      </main>
-
-      {/* Achievements Section */}
-      <section id="achievements" className="py-24 border-t border-white/5 max-w-6xl mx-auto px-6">
-        <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }} variants={fadeInUp} className="mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Achievements</h2>
-          <div className="h-1 w-20 bg-indigo-500 rounded-full"></div>
-        </motion.div>
-
-        <motion.div
-          variants={staggerContainer}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
-          className="grid grid-cols-1 md:grid-cols-3 gap-6"
-        >
-          <AchievementCard
-            title="15-Day MERN Bootcamp"
-            description="Completed an intensive 15-day MERN Stack Internship Training Program covering React.js, Node.js, Express.js, and MongoDB."
-          />
-          <AchievementCard
-            title="Production Systems Built"
-            description="Developed multiple production-ready web and mobile applications from scratch, including complex AI platforms and recruitment systems."
-          />
-          <AchievementCard
-            title="Real-world AI Integration"
-            description="Extensive hands-on experience cleanly integrating Generative AI APIs and specialized computer vision tracking into real-world projects."
-          />
-        </motion.div>
-      </section>
-
-      {/* Contact Section */}
-      <section id="contact" className="py-24 border-t border-white/5 max-w-4xl mx-auto px-6 text-center">
-        <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }} variants={fadeInUp} className="mb-8">
-          <div className="inline-block p-4 bg-green-500/10 rounded-full text-green-400 mb-6">
-            <MessageCircle size={40} />
           </div>
-          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">Let's Build Something.</h2>
-          <p className="text-xl text-slate-400 mb-10 leading-relaxed max-w-2xl mx-auto">
-            I am currently open to new opportunities. Whether you have a question, a project idea, or just want to chat, message me on WhatsApp!
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <a
-              href="https://wa.me/916201041137"
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center justify-center gap-3 px-8 py-4 bg-green-600 hover:bg-green-500 text-white rounded-full font-bold text-lg transition-all hover:scale-105 shadow-[0_0_20px_rgba(34,197,94,0.4)] w-full sm:w-auto"
-            >
-              <MessageCircle size={20} /> Message on WhatsApp
-            </a>
-            <a
-              href="mailto:shalinisinha.cspatna@gmail.com"
-              className="inline-flex items-center justify-center gap-3 px-8 py-4 bg-white/5 border border-white/10 hover:bg-white/10 text-white rounded-full font-bold text-lg transition-all hover:scale-105 w-full sm:w-auto"
-            >
-              <Mail size={20} /> Send an Email
-            </a>
-          </div>
-        </motion.div>
-      </section>
+        ))}
+      </div>
 
-      
+      {/* Nav buttons */}
+      <button
+        className="gsap-nav-btn gsap-nav-left"
+        onClick={() => { if (autoPlayRef.current) clearInterval(autoPlayRef.current); prev(); }}
+        aria-label="Previous"
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round">
+          <polyline points="15 18 9 12 15 6" />
+        </svg>
+      </button>
+      <button
+        className="gsap-nav-btn gsap-nav-right"
+        onClick={() => { if (autoPlayRef.current) clearInterval(autoPlayRef.current); next(); }}
+        aria-label="Next"
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round">
+          <polyline points="9 18 15 12 9 6" />
+        </svg>
+      </button>
+
+      {/* Progress bar */}
+      <div className="gsap-progress-bar">
+        <div
+          className="gsap-progress-fill"
+          style={{ width: `${((current + 1) / screenshots.length) * 100}%` }}
+        />
+      </div>
+
+      {/* Dots */}
+      <div className="gsap-dots">
+        {screenshots.map((_, i) => (
+          <button
+            key={i}
+            className={`gsap-dot ${i === current ? "active" : ""}`}
+            onClick={() => { if (autoPlayRef.current) clearInterval(autoPlayRef.current); goTo(i); }}
+            aria-label={`Slide ${i + 1}`}
+          />
+        ))}
+      </div>
+
+      {/* Counter */}
+      <div className="gsap-counter">
+        <span>{String(current + 1).padStart(2, "0")}</span>
+        <span className="gsap-counter-sep">/</span>
+        <span>{String(screenshots.length).padStart(2, "0")}</span>
+      </div>
     </div>
   );
 }
 
-// Subcomponents
+function TerminalAnimation() {
+  const [copied, setCopied] = useState(false);
 
-function SkillCard({ icon, title, skills }: { icon: React.ReactNode, title: string, skills: string }) {
+  const code = `class Developer:
+    name = "Shalini Sinha"
+    role = "Full Stack Developer — AI"
+    stack = ["React", "Python", "FastAPI", "Node.js"]
+    status = "Available for opportunities"`;
+
+  const copyCode = () => {
+    navigator.clipboard.writeText(code);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   return (
-    <motion.div
-      variants={fadeInUp}
-      className="bg-white/5 border border-white/5 rounded-2xl p-6 hover:bg-white/10 transition-all hover:-translate-y-1 group"
-    >
-      <div className="mb-4 bg-white/5 w-14 h-14 rounded-xl flex justify-center items-center group-hover:scale-110 transition-transform">
-        {icon}
+    <div className="terminal">
+      <div className="term-head">
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span style={{ background: "#e5534b", width: 10, height: 10, borderRadius: "50%", display: "inline-block" }} />
+          <span style={{ background: "#e0a64d", width: 10, height: 10, borderRadius: "50%", display: "inline-block" }} />
+          <span style={{ background: "#57ab5a", width: 10, height: 10, borderRadius: "50%", display: "inline-block" }} />
+          <span className="term-title" style={{ color: "var(--muted)", fontFamily: "var(--font-mono)", fontSize: 12, marginLeft: 6 }}>whoami.py</span>
+        </div>
+        <button
+          onClick={copyCode}
+          style={{
+            fontFamily: "var(--font-mono)",
+            fontSize: "11px",
+            color: copied ? "var(--accent)" : "var(--muted)",
+            background: "transparent",
+            border: "1px solid var(--line)",
+            borderRadius: "6px",
+            padding: "3px 10px",
+            cursor: "pointer",
+            transition: "all 0.2s",
+          }}
+        >
+          {copied ? "✓ Copied" : "Copy"}
+        </button>
       </div>
-      <h3 className="text-lg font-bold text-white mb-2">{title}</h3>
-      <p className="text-sm text-slate-400 leading-relaxed">{skills}</p>
-    </motion.div>
+
+      <div className="term-body" style={{ padding: "20px 22px", minHeight: "auto" }}>
+        <pre style={{ margin: 0, fontFamily: "var(--font-mono)", fontSize: "13px", lineHeight: "1.85" }}>
+          <code>
+            <span style={{ color: "#C792EA" }}>class</span> <span style={{ color: "#5EEAD4" }}>Developer</span>:<br />
+            {"    "}<span style={{ color: "#F0B429" }}>name</span> = <span style={{ color: "#5EEAD4" }}>&quot;Shalini Sinha&quot;</span><br />
+            {"    "}<span style={{ color: "#F0B429" }}>role</span> = <span style={{ color: "#5EEAD4" }}>&quot;Full Stack Developer — AI&quot;</span><br />
+            {"    "}<span style={{ color: "#F0B429" }}>stack</span> = [<span style={{ color: "#34d399" }}>&quot;React&quot;</span>, <span style={{ color: "#34d399" }}>&quot;Python&quot;</span>, <span style={{ color: "#34d399" }}>&quot;FastAPI&quot;</span>, <span style={{ color: "#34d399" }}>&quot;Node.js&quot;</span>]<br />
+            {"    "}<span style={{ color: "#F0B429" }}>status</span> = <span style={{ color: "#34d399" }}>&quot;Available for opportunities 🟢&quot;</span>
+          </code>
+        </pre>
+      </div>
+    </div>
   );
 }
 
-function ExperienceItem({ title, company, date, description }: { title: string, company: string, date: string, description: string[] }) {
+export default function Portfolio() {
+  const [activeSection, setActiveSection] = useState("about");
+
+  useEffect(() => {
+    const revealEls = document.querySelectorAll("[data-reveal]");
+    const obs = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting) {
+            e.target.classList.add("in");
+            obs.unobserve(e.target);
+          }
+        });
+      },
+      { threshold: 0.15 }
+    );
+    revealEls.forEach((el) => obs.observe(el));
+    return () => obs.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const sections = ["about", "skills", "experience", "projects", "screenshots", "achievements", "contact"];
+      for (const section of sections) {
+        const element = document.getElementById(section);
+        if (element) {
+          const rect = element.getBoundingClientRect();
+          if (rect.top <= 150 && rect.bottom >= 150) {
+            setActiveSection(section);
+            break;
+          }
+        }
+      }
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const scrollToSection = (id: string) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+  };
+
   return (
-    <motion.div
-      initial="hidden"
-      whileInView="visible"
-      viewport={{ once: true, margin: "-50px" }}
-      variants={fadeInUp}
-      className="relative pl-8 md:pl-0"
-    >
-      <div className="md:grid md:grid-cols-12 gap-6">
-        <div className="md:col-span-3 mb-4 md:mb-0 md:text-right">
-          <p className="text-indigo-400 font-mono text-sm tracking-tight">{date}</p>
-        </div>
-        <div className="md:col-span-9 relative border-l border-white/10 pl-6 pb-12 last:pb-0">
-          <div className="absolute w-3 h-3 bg-indigo-500 rounded-full -left-[1.5px] top-1 shadow-[0_0_10px_rgba(99,102,241,0.5)]"></div>
-          <h3 className="text-xl font-bold text-white">{title}</h3>
-          <p className="text-slate-400 mb-4 font-medium">{company}</p>
-          <ul className="space-y-2 text-slate-300 text-sm">
-            {description.map((item, idx) => (
-              <li key={idx} className="flex gap-2">
-                <span className="text-indigo-500 mt-1">▹</span>
-                <span className="leading-relaxed">{item}</span>
-              </li>
+    <>
+      {/* NAV */}
+      <nav>
+        <div className="wrap" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", height: 64 }}>
+          <div className="nav-mark">SHALINI <span>SINHA</span></div>
+          <div className="nav-links">
+            {[
+              { id: "about", name: "About" },
+              { id: "skills", name: "Skills" },
+              { id: "experience", name: "Experience" },
+              { id: "projects", name: "Projects" },
+              { id: "screenshots", name: "Screenshots" },
+              { id: "achievements", name: "Achievements" },
+              { id: "contact", name: "Contact" },
+            ].map((item) => (
+              <a
+                key={item.id}
+                href={`#${item.id}`}
+                onClick={(e) => { e.preventDefault(); scrollToSection(item.id); }}
+                style={{ color: activeSection === item.id ? "#E9EEF3" : undefined }}
+              >
+                {item.name}
+              </a>
             ))}
-          </ul>
-        </div>
-      </div>
-    </motion.div>
-  );
-}
-
-function ProjectCard({ title, tech, description }: { title: string, tech: string, description: string }) {
-  return (
-    <motion.div
-      variants={fadeInUp}
-      className="group relative bg-[#0a0a0a] border border-white/10 rounded-2xl p-8 overflow-hidden hover:border-indigo-500/50 transition-colors"
-    >
-      <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-      <div className="relative z-10 flex flex-col h-full">
-        <div className="flex justify-between items-start mb-6">
-          <div className="p-3 bg-indigo-500/10 rounded-xl text-indigo-400 group-hover:bg-indigo-500 group-hover:text-white transition-colors">
-            <Briefcase size={24} />
           </div>
         </div>
-        <h3 className="text-xl font-bold text-white mb-2 group-hover:text-indigo-400 transition-colors">{title}</h3>
-        <p className="text-xs font-mono text-indigo-300 mb-4">{tech}</p>
-        <p className="text-sm text-slate-400 leading-relaxed flex-grow">{description}</p>
-      </div>
-    </motion.div>
-  );
-}
+      </nav>
 
-function AchievementCard({ title, description }: { title: string, description: string }) {
-  return (
-    <motion.div
-      variants={fadeInUp}
-      className="bg-white/5 border border-white/5 rounded-2xl p-8 hover:bg-white/10 transition-all group"
-    >
-      <div className="mb-6 p-3 bg-indigo-500/10 inline-block rounded-xl text-indigo-400 group-hover:bg-indigo-500 group-hover:text-white transition-all">
-        <Trophy size={28} />
-      </div>
-      <h3 className="text-xl font-bold text-white mb-3 tracking-tight">{title}</h3>
-      <p className="text-slate-400 leading-relaxed">{description}</p>
-    </motion.div>
+      {/* HERO */}
+      <header className="hero">
+        <div className="wrap hero-grid">
+          <div>
+            <div className="avatar-ring">
+              <Image src="/assets/profile.jpeg" alt="Shalini Sinha" width={76} height={76} />
+            </div>
+            <div className="eyebrow-row">
+              <span className="dot" /> Available For Opportunities
+            </div>
+            <h1 className="headline">
+              Full Stack Developer<br />
+              <span className="line2">Building AI Into Everyday Products.</span>
+            </h1>
+            <p className="hero-desc">
+              3+ Years Shipping Production Apps with <b>React, React Native, Node.js, Python &amp; FastAPI</b> — Resume Scoring, PDF Parsing, Exam Proctoring, and Chatbots Used by Real People, Not Demos.
+            </p>
+            <div className="hero-cta">
+              <a href="#projects" className="btn btn-primary" onClick={(e) => { e.preventDefault(); scrollToSection("projects"); }}>View Projects →</a>
+              <a href="mailto:shalinisinha.cspatna@gmail.com" className="btn btn-ghost">Get In Touch</a>
+            </div>
+          </div>
+          <TerminalAnimation />
+        </div>
+      </header>
+
+      {/* ABOUT */}
+      <section id="about">
+        <div className="wrap">
+          <div className="sec-head reveal" data-reveal>
+            <span className="sec-num">01</span>
+            <span className="sec-title">About</span>
+          </div>
+          <p className="about-text reveal" data-reveal>
+            Currently building at <b>DgCrux Technology</b>, where I&apos;ve architected an AI Question-Paper Platform, a Real-Time Exam-Proctoring System using Computer Vision, and an AI-driven Job Portal with Resume Parsing and Scoring. Before that, I spent nearly two years at <b>Mania Group of Technology</b> shipping Full-Stack MERN applications with Real-Time features and Payment Integrations. I care about production quality — API performance, clean database queries, and apps that hold up under real usage.
+          </p>
+          <div className="stat-row">
+            <div className="stat reveal" data-reveal>
+              <div className="stat-num">3+</div>
+              <div className="stat-label">YEARS IN PRODUCTION</div>
+            </div>
+            <div className="stat reveal" data-reveal>
+              <div className="stat-num">10+</div>
+              <div className="stat-label">SHIPPED APPLICATIONS</div>
+            </div>
+            <div className="stat reveal" data-reveal>
+              <div className="stat-num">6</div>
+              <div className="stat-label">AI-POWERED FEATURES</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* SKILLS */}
+      <section id="skills">
+        <div className="wrap">
+          <div className="sec-head reveal" data-reveal>
+            <span className="sec-num">02</span>
+            <span className="sec-title">Skills</span>
+          </div>
+          <div className="skill-groups">
+            {[
+              { cat: "LANGUAGES", skills: ["JavaScript", "Python", "SQL"] },
+              { cat: "FRONTEND", skills: ["React.js", "Next.js", "React Native", "Redux", "Tailwind CSS", "Material UI"] },
+              { cat: "BACKEND", skills: ["Node.js", "Express.js", "FastAPI", "Spring Boot", "Socket.IO", "REST APIs"] },
+              { cat: "DATABASES", skills: ["MongoDB", "MySQL", "PostgreSQL", "Firebase"] },
+              { cat: "AI / CV", skills: ["OpenAI API", "OpenCV", "MediaPipe", "WebRTC VAD", "Resume Parsing"] },
+              { cat: "DEVOPS", skills: ["Docker", "Redis", "AWS EC2", "DigitalOcean", "Nginx", "Git"] },
+            ].map((group) => (
+              <div key={group.cat} className="skill-row reveal" data-reveal>
+                <div className="skill-cat">{group.cat}</div>
+                <div className="skill-tags">
+                  {group.skills.map((s) => (
+                    <span key={s} className="tag">{s}</span>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* EXPERIENCE */}
+      <section id="experience">
+        <div className="wrap">
+          <div className="sec-head reveal" data-reveal>
+            <span className="sec-num">03</span>
+            <span className="sec-title">Experience</span>
+          </div>
+          <div className="timeline">
+            <div className="tl-item reveal" data-reveal>
+              <div className="tl-role">Software Developer</div>
+              <div className="tl-org">DgCrux Technology Pvt. Ltd.</div>
+              <div className="tl-date">May 2025 — Present</div>
+              <ul className="tl-list">
+                <li>Architected <b>AIQP</b>, an AI Question-Paper Platform with PDF Parsing, Diagram Support, and Duplicate Detection, on Python, FastAPI &amp; OpenAI.</li>
+                <li>Built <b>Proctor AI</b> — Real-Time Exam Proctoring with Live Noise Detection and Activity-Flag Detection via Google MediaPipe.</li>
+                <li>Developed <b>EmpQuick</b>, an AI Job Portal with Resume Parsing, AI-based Scoring, and One-Click Easy Apply.</li>
+                <li>Delivered Recruitment Portals for <b>AIIMS Patna</b> (Spring Boot) and <b>FTII</b> (React.js, Node.js).</li>
+                <li>Own End-to-End Mobile Delivery for <b>FindTeacher</b> and <b>Ezamu</b>, including App Store Releases.</li>
+              </ul>
+            </div>
+            <div className="tl-item reveal" data-reveal>
+              <div className="tl-role">Full Stack Developer</div>
+              <div className="tl-org">Mania Group of Technology</div>
+              <div className="tl-date">Jul 2023 — Apr 2025</div>
+              <ul className="tl-list">
+                <li>Built Full-Stack MERN Applications with REST APIs and Responsive UI.</li>
+                <li>Shipped Real-Time Features via Socket.IO, Integrated PhonePe Payments and MSG91 OTP Authentication.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* PROJECTS */}
+      <section id="projects">
+        <div className="wrap">
+          <div className="sec-head reveal" data-reveal>
+            <span className="sec-num">04</span>
+            <span className="sec-title">Selected Projects</span>
+          </div>
+          <div className="proj-grid reveal" data-reveal>
+            {[
+              { title: "HR360", desc: "End-to-end HR & employee management portal — attendance, payroll, recruitment, ATS resume scoring, and auto-generated job links, backed by an AI chatbot that answers employees' company and policy questions directly, with Gmail and Google Calendar integration for scheduling and notifications.", stack: ["Python", "OpenAI", "Google Mail API", "Google Calendar API", "ATS Scoring"] },
+              { title: "AIQP", desc: "AI-powered question-paper platform for exam bodies — parses source PDFs including diagrams, generates fresh questions with OpenAI, flags duplicates against the existing question bank, and lets reviewers bookmark and manage syllabus-wise content before publishing.", stack: ["Python", "FastAPI", "OpenAI"] },
+              { title: "Proctor AI", desc: "Real-time exam proctoring system built for remote testing — detects background noise with WebRTC VAD, tracks candidate activity and posture with Google MediaPipe, and streams live flags to invigilators over Socket.IO during the exam window.", stack: ["MediaPipe", "Socket.IO", "WebRTC VAD"] },
+              { title: "EmpQuick", desc: "AI-driven job portal that parses uploaded resumes, scores them against job requirements with OpenAI, and surfaces matched roles to candidates — with a one-click Easy Apply flow that removes the usual friction from applying.", stack: ["React.js", "Node.js", "OpenAI"] },
+              { title: "Civils Adda", desc: "Government exam prep platform spanning web and mobile — handles full test workflows, instant results and rankings, exam scheduling, and Firebase push notifications to keep aspirants updated on new tests and results.", stack: ["React Native", "Firebase"] },
+              { title: "Balmukund Super Steel", desc: "Android/iOS app serving six role types — Admin, Sales, Dealer, Distributor, Mason, Employee — covering attendance, leave, and paginated order management, plus WhatsApp ordering via AiSensy with automated alerts for orders, attendance, and leave.", stack: ["React Native", "AiSensy"] },
+              { title: "AIIMS Patna Recruitment Portal", desc: "Backend system for AIIMS Patna's recruitment drives — built candidate application APIs, role-based access for admin and reviewers, application status tracking, and document handling, with Spring Boot powering the core service layer for a high-traffic government hiring cycle.", stack: ["Spring Boot", "Java", "REST APIs", "MySQL"] },
+              { title: "FTII Recruitment Portal", desc: "Full candidate-facing recruitment platform for FTII — built the UI in React.js along with backend workflows in Node.js, covering job listings, application forms, submission tracking, and admin review screens, integrated end-to-end with REST APIs.", stack: ["React.js", "Node.js", "Express.js", "MongoDB"] },
+            ].map((proj, i) => (
+              <div key={i} className="proj-card">
+                <div className="proj-title">{proj.title}</div>
+                <div className="proj-desc">{proj.desc}</div>
+                <div className="proj-stack">
+                  {proj.stack.map((s) => (
+                    <span key={s}>{s}</span>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* EDUCATION */}
+      <section id="education">
+        <div className="wrap">
+          <div className="sec-head reveal" data-reveal>
+            <span className="sec-num">05</span>
+            <span className="sec-title">Education</span>
+          </div>
+          <div className="edu-card reveal" data-reveal>
+            <div>
+              <div className="edu-name">Bachelor of Computer Applications</div>
+              <div className="edu-org">Patna Women&apos;s College, Patna · 2021</div>
+            </div>
+            <div className="edu-score">CGPA 9.64</div>
+          </div>
+          <div className="edu-mini reveal" data-reveal>
+            12th — Holy Mission Senior Secondary School (89%) · 10th — St. John Residential Public School (9.8 CGPA)
+          </div>
+        </div>
+      </section>
+
+      {/* ACHIEVEMENTS */}
+      <section id="achievements">
+        <div className="wrap">
+          <div className="sec-head reveal" data-reveal>
+            <span className="sec-num">06</span>
+            <span className="sec-title">Achievements</span>
+          </div>
+          <div className="ach-grid">
+            {/* Card 1 — Certificate */}
+            <div className="ach-card reveal" data-reveal>
+              <div className="ach-img-wrap">
+                <Image src="/assets/certificate.jpeg" alt="MERN Stack mentorship certificate" width={600} height={400} />
+              </div>
+              <div className="ach-body">
+                <span className="ach-tag">MENTORSHIP</span>
+                <div className="ach-title">Trained An Intern In MERN Stack Fundamentals</div>
+                <div className="ach-desc">Mentored an engineering student from Siwan on a MERN Stack internship program at DgCrux Technology, guiding them from fundamentals through hands-on project work — recognized as Mentor on their completion certificate.</div>
+              </div>
+            </div>
+
+            {/* Card 2 — Manager Message */}
+            <div className="ach-card reveal" data-reveal>
+              <div className="ach-img-wrap dark">
+                <Image src="/assets/msg.jpeg" alt="Manager appreciation message" width={600} height={400} />
+              </div>
+              <div className="ach-body">
+                <span className="ach-tag">RECOGNITION</span>
+                <div className="ach-title">Called Out By Leadership For The AIIMS Patna Delivery</div>
+                <div className="ach-desc">When the AIIMS Patna Recruitment Portal shipped on schedule, the Managing Director recognized my dedication and effort by name to the whole team.</div>
+              </div>
+            </div>
+
+            {/* Card 3 — Google Reviews (student.png) — full width */}
+            <div className="ach-card ach-card-wide reveal" data-reveal>
+              <div className="ach-img-wrap ach-img-reviews">
+                <Image
+                  src="/assets/student.png"
+                  alt="Student & client Google reviews for DgCrux Technology"
+                  width={1200}
+                  height={750}
+                  className="ach-review-img"
+                  quality={95}
+                />
+              </div>
+              <div className="ach-body">
+                <span className="ach-tag">STUDENT REVIEWS</span>
+                <div className="ach-title">Google Reviews — 5.0 ★ Student &amp; Client Feedback</div>
+                <div className="ach-desc">
+                  Positive feedback and appreciation from students and clients for MERN stack mentorship, hands-on training, and project delivery at DgCrux Technology.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* PROJECT SCREENSHOTS */}
+      <section id="screenshots">
+        <div className="wrap">
+          <div className="sec-head reveal" data-reveal>
+            <span className="sec-num">07</span>
+            <span className="sec-title">Project Screenshots</span>
+          </div>
+          <ProjectScreenshotSlider />
+        </div>
+      </section>
+
+      {/* CONTACT / FOOTER */}
+      <footer id="contact">
+        <div className="wrap">
+          <div className="contact-title reveal" data-reveal>
+            Let&apos;s Build Something <span>Useful</span> Together.
+          </div>
+          <p className="about-text reveal" data-reveal style={{ maxWidth: "50ch" }}>
+            Open to full-stack and AI-focused roles. Reach out directly, or find me on GitHub and LinkedIn.
+          </p>
+          <div className="contact-links reveal" data-reveal>
+            <a className="clink" href="mailto:shalinisinha.cspatna@gmail.com">✉ Email: shalinisinha.cspatna@gmail.com</a>
+            <a className="clink" href="tel:+916201041137">☎ Call: +91 6201041137</a>
+            <a className="clink" href="https://github.com/Shalinisinha22" target="_blank" rel="noopener noreferrer">⌥ GitHub</a>
+            <a className="clink" href="https://www.linkedin.com/in/shalini-sinha-bbb943202" target="_blank" rel="noopener noreferrer">in LinkedIn</a>
+            <a className="clink" href="#about">◆ Portfolio</a>
+          </div>
+          <div className="foot-bottom">
+            <span>Shalini Sinha — Patna, India</span>
+            <span>© {new Date().getFullYear()}</span>
+          </div>
+        </div>
+      </footer>
+    </>
   );
 }
