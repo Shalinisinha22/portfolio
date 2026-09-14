@@ -300,7 +300,7 @@ export default function Portfolio() {
       <nav>
         <div className="wrap" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", height: 64 }}>
           <div className="nav-mark">SHALINI <span>SINHA</span></div>
-          <div className="nav-links">
+          <div className="nav-links" style={{ alignItems: "center" }}>
             {[
               { id: "about", name: "About" },
               { id: "skills", name: "Skills" },
@@ -319,6 +319,16 @@ export default function Portfolio() {
                 {item.name}
               </a>
             ))}
+            <a
+              href="/assets/resume.pdf"
+              target="_blank"
+              rel="noopener noreferrer"
+              download="Shalini_Sinha_Resume.pdf"
+              className="btn btn-primary"
+              style={{ padding: "6px 14px", fontSize: "12px", borderRadius: "6px", textDecoration: "none", marginLeft: "8px" }}
+            >
+              Resume 📄
+            </a>
           </div>
         </div>
       </nav>
@@ -340,8 +350,23 @@ export default function Portfolio() {
             <p className="hero-desc">
               3+ Years Shipping Production Apps with <b>React, React Native, Node.js, Python &amp; FastAPI</b> — Resume Scoring, PDF Parsing, Exam Proctoring, and Chatbots Used by Real People, Not Demos.
             </p>
-            <div className="hero-cta">
-              <a href="#projects" className="btn btn-primary" onClick={(e) => { e.preventDefault(); scrollToSection("projects"); }}>View Projects →</a>
+            <div className="hero-cta" style={{ flexWrap: "wrap", gap: "10px" }}>
+              <a
+                href="/assets/resume.pdf"
+                target="_blank"
+                rel="noopener noreferrer"
+                download="Shalini_Sinha_Resume.pdf"
+                className="btn btn-primary"
+                style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="7 10 12 15 17 10" />
+                  <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+                Download Resume
+              </a>
+              <a href="#projects" className="btn btn-ghost" onClick={(e) => { e.preventDefault(); scrollToSection("projects"); }}>View Projects →</a>
               <a href="mailto:shalinisinha.cspatna@gmail.com" className="btn btn-ghost">Get In Touch</a>
             </div>
           </div>
@@ -567,6 +592,7 @@ export default function Portfolio() {
             Open to full-stack and AI-focused roles. Reach out directly, or find me on GitHub and LinkedIn.
           </p>
           <div className="contact-links reveal" data-reveal>
+            <a className="clink" href="/assets/resume.pdf" target="_blank" rel="noopener noreferrer" download="Shalini_Sinha_Resume.pdf" style={{ borderColor: "var(--accent)", color: "var(--accent)" }}>📄 Download Resume (PDF)</a>
             <a className="clink" href="mailto:shalinisinha.cspatna@gmail.com">✉ Email: shalinisinha.cspatna@gmail.com</a>
             <a className="clink" href="tel:+916201041137">☎ Call: +91 6201041137</a>
             <a className="clink" href="https://github.com/Shalinisinha22" target="_blank" rel="noopener noreferrer">⌥ GitHub</a>
